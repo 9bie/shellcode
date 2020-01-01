@@ -31,7 +31,7 @@ def Center(key):
             keys[0]=int(time.time())
         print(keys)
         return keys[1]
-    elif key==str(int(int(time.time()) / 10))+".jpg":
+    elif key==str(int(int(time.time()) / 100))+".jpg":
 
         arc4 = ARC4(keys[1])
         enc = arc4.encrypt(buf)
