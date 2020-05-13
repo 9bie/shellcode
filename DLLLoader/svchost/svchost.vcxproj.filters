@@ -7,7 +7,7 @@
     </Filter>
     <Filter Include="头文件">
       <UniqueIdentifier>{93995380-89BD-4b04-88EB-625FBE52EBFB}</UniqueIdentifier>
-      <Extensions>h;hh;hpp;hxx;hm;inl;inc;ipp;xsd</Extensions>
+      <Extensions>h;hh;hpp;hxx;hm;inl;inc;xsd</Extensions>
     </Filter>
     <Filter Include="资源文件">
       <UniqueIdentifier>{67DA6AB6-F800-4c08-8B7A-83BB121AAD01}</UniqueIdentifier>
@@ -15,38 +15,12 @@
     </Filter>
   </ItemGroup>
   <ItemGroup>
-    <ClCompile Include="payload.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="EsyGet\HttpRequest.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="Md5\md5.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="b64\base64.cpp">
-      <Filter>源文件</Filter>
-    </ClCompile>
-    <ClCompile Include="rc4\ARC4.cpp">
+    <ClCompile Include="svchost.c">
       <Filter>源文件</Filter>
     </ClCompile>
   </ItemGroup>
   <ItemGroup>
-    <ClInclude Include="EsyGet\HttpRequest.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="Md5\md5.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="b64\base64.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-    <ClInclude Include="rc4\ARC4.h">
-      <Filter>头文件</Filter>
-    </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\installed.bat">
+    <None Include="..\install_pure.bat">
       <Filter>资源文件</Filter>
     </None>
   </ItemGroup>

@@ -67,7 +67,6 @@ void WINAPI BDHandler(DWORD dwControl)
 int  main()
 {
     
-    
     //FARPROC fpFun = GetProcAddress(Advapi32, "StartServiceCtrlDispatcherA");
     //StartServiceCtrlDispatcherA_ StartServiceCtrlDispatcher = (StartServiceCtrlDispatcherA_)*fpFun;
     SERVICE_TABLE_ENTRY ServiceTable[2];

