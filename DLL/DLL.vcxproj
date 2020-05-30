@@ -1,4 +1,4 @@
-<?xml version="1.0" encoding="utf-8"?>
+﻿<?xml version="1.0" encoding="utf-8"?>
 <Project DefaultTargets="Build" ToolsVersion="15.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
   <ItemGroup Label="ProjectConfigurations">
     <ProjectConfiguration Include="Debug|Win32">
@@ -114,6 +114,7 @@
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
+    <ClCompile Include="..\ServiceExE\shellcode\dns.cpp" />
     <ClCompile Include="b64\base64.cpp" />
     <ClCompile Include="EsyGet\HttpRequest.cpp" />
     <ClCompile Include="Md5\md5.cpp" />
@@ -121,6 +122,7 @@
     <ClCompile Include="main.cpp" />
   </ItemGroup>
   <ItemGroup>
+    <ClInclude Include="..\ServiceExE\shellcode\dns.h" />
     <ClInclude Include="b64\base64.h" />
     <ClInclude Include="EsyGet\HttpRequest.h" />
     <ClInclude Include="Md5\md5.h" />
