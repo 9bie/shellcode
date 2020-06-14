@@ -103,12 +103,14 @@ std::string HttpRequest::HttpGet(std::string req)
             std::cout << "errNo:" << errNo << std::endl; 
         }  
         // socket环境清理
+		closesocket(clientSocket);
         ::WSACleanup();  
     }
     catch (...)
     {
         return "";
     }
+	
     return ret;
 }
 
@@ -179,6 +181,7 @@ std::string HttpRequest::HttpPost(std::string req, std::string data)
         {  
             errNo = WSAGetLastError();  
         }  
+		closesocket(clientSocket);
         // socket环境清理
         ::WSACleanup();  
     }

