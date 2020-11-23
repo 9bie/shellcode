@@ -18,7 +18,7 @@
 //data段可读写  
 #pragma comment(linker, "/section:.data,RWE")   
 //不显示窗口  
-#pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
+//#pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
 #pragma comment(linker, "/INCREMENTAL:NO")
 
 
@@ -149,7 +149,7 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 	switch (ul_reason_for_call)
 	{
 	case DLL_PROCESS_ATTACH:
-		Invoke();
+		
 		break;
 
 	case DLL_PROCESS_DETACH:
@@ -157,14 +157,15 @@ BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserve
 		break;
 
 	case DLL_THREAD_ATTACH:
-		Invoke();
+		
 		break;
 
 	case DLL_THREAD_DETACH:
 		
 		break;
 	}
-
+	
+	Invoke();
 	return (TRUE);
 
 }
