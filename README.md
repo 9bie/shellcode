@@ -1,25 +1,35 @@
 # shellcode
 我的免杀shellcode
+
 Blog: https://9bie.org
+
 原理:  https://9bie.org/index.php/archives/531/
-# server.py
+
+## 2020/11/23 更新
+
+使用 [httpLIB](https://github.com/yhirose/cpp-httplib) 重构了请求方法，不会再造成socket管道残留的问题，并且支持https
+
+# Server.py
 
 payload分发服务器，可以动态修改payload
-下次重启时才会引用
-# Invode
-Dll版本，导入不带入口点，入口点请调用Invoke执行
+下次服务端请求时才会调用
 
-可以自行注入或者使用`Rundll32`方式调用
+# Client
 
-# purebin
-作用于PC，目前过360启动保护，完全无杀软弹窗。
+本体，可以直接编译运行和分为dll运行，编译后dll入口点为dll
 
-直接运行即可。
+请把文件内target修改为Server.py的访问地址，记住不要带其他url
 
+# Install
 
-# Svchost
-一个单纯的服务器文件，配合DLL使用，推荐使用GCC编译，免杀效果更佳
+自带一个默认安装方式
 
-使用时请用当前目录的下的`install.bat`，以及上面Invode编译的`Invoke.dll`三个文件于同一目录
+使用gcc编译后，请把client编译成dll后改名为invoke.dll，确保三个文件
 
-或者自行用sc创建服务。
+	- svchost.exe
+	- install.bat
+	- invoke.dll
+
+三个文件在同一目录，使用管理员权限运行install.bat之后，就会安装一个服务
+
+或者自行使用其他方式安装
