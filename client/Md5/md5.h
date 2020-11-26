@@ -86,10 +86,10 @@ typedef unsigned char byte;
 /* Define of byte. */
 typedef unsigned int bit32;
 
-class MD5 {
+class MD5_ {
 public:
 	/* Construct a MD5 object with a string. */
-	MD5(const string& message);
+	MD5_(const string& message);
 
 	/* Generate md5 digest. */
 	const byte* getDigest();

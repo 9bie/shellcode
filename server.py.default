@@ -9,8 +9,8 @@ import random
 import string
 app = Flask(__name__)
 buf_x64 = b""
-buf_x64 = b""
-obs = "asdasjasdnlkasdj[psgdakn[jF*("
+buf_x86 = b""
+obs = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB"
 keys = [int(time.time()), ''.join(random.sample(string.ascii_letters + string.digits, 32))]
 
 

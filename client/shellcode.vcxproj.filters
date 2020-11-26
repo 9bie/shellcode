@@ -27,6 +27,9 @@
     <ClCompile Include="rc4\ARC4.cpp">
       <Filter>源文件</Filter>
     </ClCompile>
+    <ClCompile Include="http\EdUrlParser.cpp">
+      <Filter>源文件</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Md5\md5.h">
@@ -38,13 +41,8 @@
     <ClInclude Include="rc4\ARC4.h">
       <Filter>头文件</Filter>
     </ClInclude>
-    <ClInclude Include="http\httplib.h">
+    <ClInclude Include="http\EdUrlParser.h">
       <Filter>头文件</Filter>
     </ClInclude>
-  </ItemGroup>
-  <ItemGroup>
-    <None Include="..\installed.bat">
-      <Filter>源文件\资源文件</Filter>
-    </None>
   </ItemGroup>
 </Project>
